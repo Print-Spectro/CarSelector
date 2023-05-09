@@ -10,57 +10,6 @@ def last(sequence):
     "a"
 
 
-class Button():
-    def __init__(self, x, y, width, height, buttonText="Button", onclickFunction=None, onePress=False, buttonImage = None):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.onclickFunction = onclickFunction
-        self.onePress = onePress
-        self.alreadyPressed = False
-
-        self.fillColors = {
-            'normal': '#ffffff',
-            'hover': '#666666',
-            'pressed': '#333333',
-        }
-
-        self.buttonSurface = pg.Surface((self.width, self.height))
-        self.buttonRect = pg.Rect(self.x, self.y, self.width, self.height)
-        if buttonImage != None: 
-            self.buttonSurf = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', buttonImage)).convert_alpha(), 10)
-        elif buttonText != None:
-            self.buttonSurf = hd.Text_Font.render(buttonText, True, (20, 20, 20))  
- 
-        hd.buttons.append(self)
-
-    def process(self, screen):
-        """
-        Tracks mouse location and if mouse intersects with the button there is a colour change.
-        Upon click 
-        """
-        mousePos = pg.mouse.get_pos()
-        self.buttonSurface.fill(self.fillColors['normal'])
-        if self.buttonRect.collidepoint(mousePos):
-            self.buttonSurface.fill(self.fillColors['hover'])
-            if pg.mouse.get_pressed(num_buttons=3)[0]:
-                self.buttonSurface.fill(self.fillColors['pressed'])
-                if self.onePress:
-                    self.onclickFunction()
-                elif not self.alreadyPressed:
-                    self.onclickFunction()
-                    self.alreadyPressed = True
-            else:
-                self.alreadyPressed = False
-        self.buttonSurface.blit(self.buttonSurf, [
-        self.buttonRect.width/2 - self.buttonSurf.get_rect().width/2,
-        self.buttonRect.height/2 - self.buttonSurf.get_rect().height/2
-            ])
-        screen.blit(self.buttonSurface, self.buttonRect)
-
-
-
 def fill(surface, color):
     """Fill all pixels of the surface with color, preserve transparency."""
     w, h = surface.get_size()
@@ -70,7 +19,55 @@ def fill(surface, color):
             a = surface.get_at((x, y))[3]
             surface.set_at((x, y), pg.Color(r, g, b, a))
 
-class vehicle:
+class Button():
+    def __init__(self, x, y, width, height, buttonText="Button", onclickFunction=None, onePress=False, buttonImage = None, button_list = True):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.onclickFunction = onclickFunction
+        self.onePress = onePress
+        self.alreadyPressed = False
+        self.fillColors = {
+            'normal': '#ffffff',
+            'hover': '#666666',
+            'pressed': '#333333',
+        }
+
+        self.buttonSurface = pg.Surface((self.width, self.height))
+        self.buttonRect = pg.Rect(self.x, self.y, self.width, self.height)
+        if buttonImage != None: 
+            self.buttonSurf = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', buttonImage)).convert_alpha(), hd.scale)
+        elif buttonText != None:
+            self.buttonSurf = hd.Text_Font.render(buttonText, True, (20, 20, 20))  
+        if button_list:
+            hd.buttons.append(self)
+
+    def process(self, screen, **kwargs):
+        """
+        Tracks mouse location and if mouse intersects with the button there is a colour change.
+        Upon click 
+        """
+        mousePos = pg.mouse.get_pos()
+        self.buttonSurface.fill((self.fillColors['normal']))
+        if self.buttonRect.collidepoint(mousePos):
+            self.buttonSurface.fill(self.fillColors['hover'])
+            if pg.mouse.get_pressed(num_buttons=3)[0]:
+                self.buttonSurface.fill(self.fillColors['pressed'])
+                if self.onePress:
+                    self.onclickFunction(**kwargs)
+                elif not self.alreadyPressed:
+                    self.onclickFunction(**kwargs)
+                    self.alreadyPressed = True
+            else:
+                self.alreadyPressed = False
+        self.buttonSurface.blit(self.buttonSurf, [
+        self.buttonRect.width/2 - self.buttonSurf.get_rect().width/2,
+        self.buttonRect.height/2 - self.buttonSurf.get_rect().height/2
+            ])
+        screen.blit(self.buttonSurface, self.buttonRect)
+
+class vehicle():
     def __init__(self, 
                  colour_image, 
                  detail_image, 
@@ -80,31 +77,42 @@ class vehicle:
                  speed = 10, 
                  handling = 10, 
                  price = 100, 
-                 owned = True):
-        self.scale = screen.get_size()[1]/96
-        self.colour_surface = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', colour_image)).convert_alpha(), self.scale)
-        self.detail_surface = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', detail_image)).convert_alpha(), self.scale)
+                 owned = False):
+       
+        self.colour_surface = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', colour_image)).convert_alpha(), hd.scale)
+        self.detail_surface = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', detail_image)).convert_alpha(), hd.scale)
         self.size = self.colour_surface.get_size()
+        self.price = price
+        self.button = Button(hd.sx/2-hd.button_size[0]*3.5/2, hd.sy/2-hd.button_size[1]/2, hd.button_size[0]*3.5, hd.button_size[1], buttonText = "Buy £" + str(self.price), button_list = False)
         self.name = detail_image[:-4]
         self.health = health
         self.speed = speed
         self.handling = handling
-        self.price = price
         self.owned = owned
         self.position = position
-    def colour(self, colour):
+        self.colour = (200,200,200)
+        self.set_colour((200,200,200))
+    def set_colour(self, colour):
         """
         Input: colour name string in white black red yellow green blue
         Result: changes colour of all pixels in colour layer
         """
         fill(self.colour_surface, pg.Color(colour))
+        self.colour = colour
 
     def handle_movement(self):
         "up"
         "down"
 
     def draw(self, screen):
+
         "a"
+
+    def purchase(self):
+        "a"
+
+
+
 
 
 class upgrade:
@@ -126,40 +134,39 @@ def draw_selector(screen, vehicle):
     screen.blit(vehicle.detail_surface, (4*sx/5-vx/2, (sy-vy)/2))
     nametag = hd.Title_Font.render(vehicle.name, True, (200, 200, 200))
     health = hd.Title_Font.render(str(vehicle.health) + " HP", True, (200, 200, 200))
+    money = hd.Title_Font.render("£ " + str(hd.dinero), True, (200, 200, 200))
     screen.blit(nametag, (sx/20, sy-sy/2-nametag.get_size()[1]/2))
     screen.blit(health, (sx-sx/20-health.get_size()[0], sy/8-health.get_size()[1]/2))
+    screen.blit(money, (sx/20, sy/8-health.get_size()[1]/2))
+    vehicle.button.process(screen)
     for i in hd.buttons:
         i.process(screen)
 
-def colour_test(event, bean):
-    if event.type == pg.KEYDOWN:
-        if event.key == pg.K_f:
-            
-            bean.colour(hd.colours["white"])
-        if event.key == pg.K_g:
-            
-            bean.colour(hd.colours["black"])
-        if event.key == pg.K_h:
-            
-            bean.colour(hd.colours["red"])
-    
 
+    
+def colour_selector():
+    bx, by = hd.button_size
+    sx, sy = hd.screen.get_size()
+    c = 0
+    for i in hd.colours:
+        Button_i = Button(c*sx/(len(hd.colours)*2)+sx/4,5*sy/6-by/2, bx, by, buttonText="", onclickFunction = hd.colours[i].colour_set)
+        colour = hd.colours[i].colour
+        Button_i.fillColors["normal"] = colour
+        colour_i = pg.Color(colour)
+        h, s, l, a = colour_i.hsla
+        colour_i.hsla = h, s/2, l+(100-l)/2, a
+        Button_i.fillColors["hover"] = colour_i
+        Button_i.fillColors["pressed"] = colour
+        c+=1
     
 def main():
     run = True
     clock = pg.time.Clock()
-
-    clock = pg.time.Clock()
-    hd.vehicles = hd.cycler([vehicle("beancolour.png", "bean.png", hd.screen, health = 5),
-    vehicle("jeepcolour.png", "jeep.png", hd.screen, health = 10),
-    vehicle("bugatticolour.png", "bugatti.png", hd.screen, health = 10),
-    vehicle("panthercolour.png", "panther.png", hd.screen, health = 50)])
     sx, sy = hd.screen.get_size()
-    button_size = (100, 100)
-    button = Button(sx-sx/5-button_size[0]/2,3*sy/4-button_size[1]/2, 100, 100, buttonImage = "down.png", onclickFunction = hd.vehicles.forward)
-    button = Button(sx-sx/5-button_size[0]/2 ,sy/4-button_size[1]/2, 100, 100, buttonImage = "up.png", onclickFunction = hd.vehicles.reverse)
-    button = Button(sx/2-3*button_size[0]/2,sy/4-button_size[1]/2, 100, 100, buttonImage = "left.png", onclickFunction = hd.colours_cycler.forward)
-    button = Button(sx/2+1.5*button_size[0]/2 ,sy/4-button_size[1]/2, 100, 100, buttonImage = "right.png", onclickFunction = hd.colours_cycler.reverse)
+    button_size = hd.button_size
+    Button(sx-sx/5-button_size[0]/2,3*sy/4-button_size[1]/2, button_size[0], button_size[1], buttonImage = "down.png", onclickFunction = hd.vehicles.forward)
+    Button(sx-sx/5-button_size[0]/2 ,sy/4-button_size[1]/2, button_size[0], button_size[1], buttonImage = "up.png", onclickFunction = hd.vehicles.reverse)
+    colour_selector()
     # Uncomment this for a non-translucent surface.
     # Uncomment this for a non-translucent surface.
     # surface = pg.Surface((100, 150), pg.SRCALPHA)
@@ -171,7 +178,9 @@ def main():
             if event.type == pg.QUIT:
                 run = False
                 pg.quit()
-        hd.vehicles.item.colour(hd.colours_cycler.item)
+
+        
+
         draw_selector(hd.screen, hd.vehicles.item)
 
         pg.display.update()
