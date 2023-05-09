@@ -3,14 +3,16 @@ import pygame as pg
 import os
 import carselector as cs
 pg.font.init()
-screen = DISPLAYSURF = pg.display.set_mode((0, 0), pg.FULLSCREEN)
-screen = pg.display.set_mode((1000, 800))
+pg.display.set_caption('RoadRage')
+fullscreen = False
+screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
+#screen = pg.display.set_mode((1000, 800))
 sx, sy = screen.get_size()
 Title_Font = pg.font.SysFont('Squarefont', int(200*sy/1440)) if sx >= sy*1.6 else pg.font.SysFont('Squarefont', int(200*sy/2560))
 Text_Font = pg.font.SysFont('Squarefont', int(100*sy/1440)) if sx >= sy*1.6 else pg.font.SysFont('Squarefont', int(100*sy/2560))
 Background = pg.image.load(os.path.join('assets', 'road.png'))
 FPS = 60
-dinero = 100
+dinero = 50
 buttons = []
 colour_buttons = []
 button_size = (sy/10, sy/10) if sx >= sy*1.6 else (sx/16, sx/16) 
@@ -51,12 +53,13 @@ class cycler:
             self.item = self.items[self.index]
 
 
+def create_vehicles():
+    return cycler([cs.vehicle("beancolour.png", "bean.png", screen, health = 5, price = 0, owned = True),
+            cs.vehicle("jeepcolour.png", "jeep.png", screen, health = 10, price = 50),
+            cs.vehicle("bugatticolour.png", "bugatti.png", screen, health = 10, price = 100),
+            cs.vehicle("panthercolour.png", "panther.png", screen, health = 50, price = 500)])
 
-
-vehicles = cycler([cs.vehicle("beancolour.png", "bean.png", screen, health = 5, price = 0),
-    cs.vehicle("jeepcolour.png", "jeep.png", screen, health = 10, price = 50),
-    cs.vehicle("bugatticolour.png", "bugatti.png", screen, health = 10, price = 100),
-    cs.vehicle("panthercolour.png", "panther.png", screen, health = 50, price = 500)])
+vehicles = create_vehicles()
 
 
 

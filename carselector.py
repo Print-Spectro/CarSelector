@@ -1,17 +1,30 @@
 import pygame as pg
 import header as hd
+
+def toggle_fullscreen():
+    """Depricated
+    Thought it would be fun to make some rudimentary settings but 
+    pygamne didn't want to exit meaning updating all the scale values wasn't really worth it
+    """
+    if hd.fullscreen: 
+        hd.screen = pg.display.set_mode((1000, 800)) 
+        hd.fullscreen == False
+    elif not hd.fullscreen:
+        hd.screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
+        hd.fullscreen == True
+    hd.buttons = []
+    hd.vehicles = hd.create_vehicles()
+    colour_selector()
+    menu()
+
+
+
+
 def test():
     print("test_success")
-def next(pos, sequence):
-    "if pos"
-    
-
-def last(sequence):
-    "a"
-
 
 def fill(surface, color):
-    """Fill all pixels of the surface with color, preserve transparency."""
+    """Fill all pixels of the surface with color, preserving transparency."""
     w, h = surface.get_size()
     r, g, b, _ = color
     for x in range(w):
@@ -83,33 +96,54 @@ class vehicle():
         self.detail_surface = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', detail_image)).convert_alpha(), hd.scale)
         self.size = self.colour_surface.get_size()
         self.price = price
-        self.button = Button(hd.sx/2-hd.button_size[0]*3.5/2, hd.sy/2-hd.button_size[1]/2, hd.button_size[0]*3.5, hd.button_size[1], buttonText = "Buy £" + str(self.price), button_list = False)
+        self.button = Button(hd.sx/2-hd.button_size[0]*3.5/2, 
+                             hd.sy/2-hd.button_size[1]/2, 
+                             hd.button_size[0]*3.5, 
+                             hd.button_size[1], 
+                             buttonText = "Buy £" + str(self.price), 
+                             button_list = False,
+                             onclickFunction = self.purchase)
         self.name = detail_image[:-4]
         self.health = health
         self.speed = speed
         self.handling = handling
         self.owned = owned
         self.position = position
-        self.colour = (200,200,200)
-        self.set_colour((200,200,200))
+        self.colour = hd.colours["blue"].colour
+        self.set_colour(hd.colours["white"].colour)
     def set_colour(self, colour):
         """
-        Input: colour name string in white black red yellow green blue
+        Input: RGB colour tuple
         Result: changes colour of all pixels in colour layer
+        Saturation and lightnes are reduced if the vehicles has not been purchased
         """
-        fill(self.colour_surface, pg.Color(colour))
+        
         self.colour = colour
+        colour = pg.Color(colour)
+        if not self.owned: 
+            h, s, l, a = colour.hsla
+            colour.hsla = h, s/2, l/2, a
+        fill(self.colour_surface, colour)
+        
 
     def handle_movement(self):
         "up"
         "down"
 
-    def draw(self, screen):
-
-        "a"
+    def draw_button(self, screen):
+        """
+        Method for drawring the purchase button. 
+        The button will not be drawn if the vehicle is already owned. 
+        """
+        if not self.owned:
+            self.button.process(screen)
 
     def purchase(self):
-        "a"
+        if self.owned == False and hd.dinero >= self.price:
+            self.owned = True
+            hd.dinero -= self.price
+            self.set_colour(self.colour)
+            
 
 
 
@@ -122,14 +156,34 @@ class upgrade:
         self.owned = owned
         self.equipped = equipped
 
-
+def colour_selector():
+    """Creates n buttons from the colours list in the header
+    Each colour is is an object with its own method for setting colour"""
+    bx, by = hd.button_size #as always, scaling to the screen resolution
+    sx, sy = hd.screen.get_size()  
+    c = 0 #counter because I decided to use a dictionary for the colours
+    #looping through colours
+    for i in hd.colours:
+        Button_i = Button(c*sx/(len(hd.colours)*2)+sx/4,5*sy/6-by/2, bx, by, buttonText="", onclickFunction = hd.colours[i].colour_set)
+        colour = hd.colours[i].colour #changing the coloures stored in the button object
+        Button_i.fillColors["normal"] = colour
+        colour_i = pg.Color(colour)
+        h, s, l, a = colour_i.hsla
+        colour_i.hsla = h, s/2, l+(100-l)/2, a
+        Button_i.fillColors["hover"] = colour_i
+        Button_i.fillColors["pressed"] = colour
+        c+=1
 
 def draw_selector(screen, vehicle):
+    """Grouping of all the methods that draw to the screen
+    probably don't need to pass in screen or vehicle since they are global
+    """
     sx, sy = screen.get_size()
     bx, by = hd.Background.get_size()
     vx, vy = vehicle.size
     Background = pg.transform.scale(hd.Background, ((sy/by)*bx, sy))
     screen.blit(Background, (0,0))
+    vehicle.draw_button(screen)
     screen.blit(vehicle.colour_surface, (4*sx/5-vx/2, (sy-vy)/2))
     screen.blit(vehicle.detail_surface, (4*sx/5-vx/2, (sy-vy)/2))
     nametag = hd.Title_Font.render(vehicle.name, True, (200, 200, 200))
@@ -138,58 +192,40 @@ def draw_selector(screen, vehicle):
     screen.blit(nametag, (sx/20, sy-sy/2-nametag.get_size()[1]/2))
     screen.blit(health, (sx-sx/20-health.get_size()[0], sy/8-health.get_size()[1]/2))
     screen.blit(money, (sx/20, sy/8-health.get_size()[1]/2))
-    vehicle.button.process(screen)
     for i in hd.buttons:
         i.process(screen)
 
 
     
-def colour_selector():
-    bx, by = hd.button_size
-    sx, sy = hd.screen.get_size()
-    c = 0
-    for i in hd.colours:
-        Button_i = Button(c*sx/(len(hd.colours)*2)+sx/4,5*sy/6-by/2, bx, by, buttonText="", onclickFunction = hd.colours[i].colour_set)
-        colour = hd.colours[i].colour
-        Button_i.fillColors["normal"] = colour
-        colour_i = pg.Color(colour)
-        h, s, l, a = colour_i.hsla
-        colour_i.hsla = h, s/2, l+(100-l)/2, a
-        Button_i.fillColors["hover"] = colour_i
-        Button_i.fillColors["pressed"] = colour
-        c+=1
+
     
-def main():
+def menu():
+    """Herein lie the few remaining local variables. 
+    good place to create buttons that run global functions and such
+    While loop to run the game at maximum 60 updates per second. 
+    """
     run = True
     clock = pg.time.Clock()
     sx, sy = hd.screen.get_size()
-    button_size = hd.button_size
-    Button(sx-sx/5-button_size[0]/2,3*sy/4-button_size[1]/2, button_size[0], button_size[1], buttonImage = "down.png", onclickFunction = hd.vehicles.forward)
-    Button(sx-sx/5-button_size[0]/2 ,sy/4-button_size[1]/2, button_size[0], button_size[1], buttonImage = "up.png", onclickFunction = hd.vehicles.reverse)
+    bx, by = hd.button_size
+    Button(sx-sx/5-bx/2,3*sy/4-by/2, bx, by, buttonImage = "down.png", onclickFunction = hd.vehicles.forward)
+    Button(sx-sx/5-bx/2 ,sy/4-by/2, bx, by, buttonImage = "up.png", onclickFunction = hd.vehicles.reverse)
+    #Button(sx/20, 19*sy/20-by/2, bx*5, by, buttonText = "Fullscreen", onclickFunction = toggle_fullscreen) #fullscreen button
     colour_selector()
-    # Uncomment this for a non-translucent surface.
-    # Uncomment this for a non-translucent surface.
-    # surface = pg.Surface((100, 150), pg.SRCALPHA)
-    # pg.draw.circle(surface, pg.Color(40, 240, 120), (50, 50), 50)  
-    counter = 1
     while run:
         clock.tick(hd.FPS)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 run = False
-                pg.quit()
-
-        
-
+                pg.quit() #it's surprisingly hard to quit without this functionality
         draw_selector(hd.screen, hd.vehicles.item)
-
-        pg.display.update()
+        pg.display.update() #update the display at the end of each loop
         
 
 
 
 if __name__ == '__main__':
-    main()
+    menu()
     pg.quit()
  
 
