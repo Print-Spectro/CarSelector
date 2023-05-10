@@ -274,7 +274,7 @@ class vehicle:
         self.speed = speed
         self.handling = handling*2000/hd.sy
         self.owned = owned
-        self.pos = [0,100]
+        self.pos = [0,(hd.sy-self.size[1])/2]
         print(self.pos)
         self.colour = colours["blue"].colour
         self.set_colour(colours["white"].colour)
