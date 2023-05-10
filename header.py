@@ -13,8 +13,12 @@ Background = pg.image.load(os.path.join('assets', 'road.png'))
 FPS = 60
 dinero = 1000
 buttons = []
-button_size = (sy/10, sy/10) if sx >= sy*1.6 else (sx/16, sx/16) 
-scale = screen.get_size()[1]/96
+button_size = (sy/10, sy/10) if sx >= sy*1.6 else (sx/(160/9), sx/(160/9)) 
+scale = sy/96 if sx >= sy*1.6 else (sx/(96*16/9), sx/(96*16/9)) 
+obstacles = []
+coins = []
+menu = True
+driving = False
 
 
 
