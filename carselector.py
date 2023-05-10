@@ -22,6 +22,46 @@ def toggle_fullscreen():
 
 def test():
     print("test_success")
+class colour_class:
+    def __init__(self, colour):
+        self.colour = colour
+    def colour_set(self):
+        vehicles.item.set_colour(self.colour)
+
+colours ={
+            "white" : colour_class((206,206,206)),
+            "black" : colour_class((30,30,30)),
+            "red"   : colour_class((180, 16, 16)),
+            "yellow": colour_class((237, 186, 41)),
+            "green" : colour_class((91, 190, 91)),
+            "blue"  : colour_class(((46, 110, 190)))
+        }
+
+class cycler:
+    def __init__(self, items):
+        self.items = items
+        self.index = 0
+        self.item = self.items[0]
+
+    def forward(self):
+        if self.index < (len(self.items)-1):
+            self.index += 1
+            self.item = self.items[self.index]
+        elif self.index >= (len(self.items)-1):
+            self.index = 0
+            self.item = self.items[self.index]
+    def reverse(self):
+        if self.index > 0:
+            self.index -= 1
+            self.item = self.items[self.index]
+        elif self.index <= 0:
+            self.index = (len(self.items)-1)
+            self.item = self.items[self.index]
+
+
+
+
+
 
 def fill(surface, color):
     """Fill all pixels of the surface with color, preserving transparency."""
@@ -33,6 +73,9 @@ def fill(surface, color):
             surface.set_at((x, y), pg.Color(r, g, b, a))
 
 class Button():
+    """
+    Facilitates the creaton of button objects that execute a function on click.
+    """
     def __init__(self, x, y, width, height, buttonText="Button", onclickFunction=None, onePress=False, buttonImage = None, button_list = True):
         self.x = x
         self.y = y
@@ -49,10 +92,13 @@ class Button():
 
         self.buttonSurface = pg.Surface((self.width, self.height))
         self.buttonRect = pg.Rect(self.x, self.y, self.width, self.height)
-        if buttonImage != None: 
+        
+
+
+        if buttonImage != None: #conditional statement allows for more flexible button representations
             self.buttonSurf = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', buttonImage)).convert_alpha(), hd.scale)
         elif buttonText != None:
-            self.buttonSurf = hd.Text_Font.render(buttonText, True, (20, 20, 20))  
+            self.buttonSurf = hd.Text_Font.render(buttonText, True, (20, 20, 20))
         if button_list:
             hd.buttons.append(self)
 
@@ -103,14 +149,15 @@ class vehicle():
                              buttonText = "Buy £" + str(self.price), 
                              button_list = False,
                              onclickFunction = self.purchase)
+        self.magnet = upgrade("magnet.png")
         self.name = detail_image[:-4]
         self.health = health
         self.speed = speed
         self.handling = handling
         self.owned = owned
         self.position = position
-        self.colour = hd.colours["blue"].colour
-        self.set_colour(hd.colours["white"].colour)
+        self.colour = colours["blue"].colour
+        self.set_colour(colours["white"].colour)
     def set_colour(self, colour):
         """
         Input: RGB colour tuple
@@ -146,15 +193,60 @@ class vehicle():
             
 
 
-
-
-
 class upgrade:
-    def __init__(self, image, scale, owned = True, equipped = False):
-        self.surface = pg.transform.scale_by(pg.image.load(image).convert_alpha(), scale)
+    def __init__(self, image, owned = False, equipped = False, price = 10, scale = hd.scale, button_position = (1000, 100) ):
+        self.surface = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', "magnet.png")).convert_alpha(), scale)
         self.name = image[:-4]
+        self.price = price
         self.owned = owned
         self.equipped = equipped
+        self.bpos = button_position
+        self.image = image
+        bx, by = self.bpos
+        self.button_buy = Button(bx, by, hd.button_size[0], hd.button_size[1], buttonImage = image, buttonText = "£ " + str(self.price), onclickFunction=self.purchase, button_list = False)
+        self.button_buy.fillColors["normal"] = (30, 30, 30)
+        self.button_equip = Button(bx, by, hd.button_size[0], hd.button_size[1], buttonImage = image, buttonText = "£ " + str(self.price), onclickFunction=self.equip_toggle, button_list = False)
+
+    def draw_button(self, screen, vehicle):
+        """
+        Draws the buy button which runs the purchase function if not owned.
+        once owned the equip toggle button will be displayed
+        """
+        if vehicle.owned:
+            if self.owned:
+                self.button_equip.process(screen)
+
+            elif not self.owned:
+                self.button_buy.process(screen)
+                text = pg.transform.scale_by(hd.Text_Font.render("£ " + str(self.price), True, (200, 200, 200)), 0.6)
+                tx, ty = text.get_size()
+                bx, by = hd.button_size
+                screen.blit(text, (self.bpos[0]+bx/2-tx/2, self.bpos[1]+bx/2-ty/2))
+            else:
+                print("Error self.owned is not bool")
+            
+
+    def equip_toggle(self):
+        """
+        Swapps the equip state for an upgrade instance. This will only become available once owned = True, see self.draw_button.
+        """
+        if not self.equipped:
+            self.equipped = True
+            self.button_equip.fillColors["normal"] = (0, 200, 0)
+            self.button_equip.fillColors["hover"] = (0, 100, 0)
+        elif self.equipped:
+            self.equipped = False
+            self.button_equip.fillColors["normal"] = '#ffffff'
+            self.button_equip.fillColors["hover"] = '#666666'
+
+
+    def purchase(self):
+        """Used to purchase this upgrade instance. Will be stored in the instanced vehicle class so each vehicle has its own upgrades
+        Subtracts the price of the upgrade from global money "dinero" only if you can afford it and sets owned to True.
+        """
+        if not self.owned and hd.dinero >= self.price:
+            self.owned = True
+            hd.dinero -= self.price
 
 def colour_selector():
     """Creates n buttons from the colours list in the header
@@ -163,9 +255,9 @@ def colour_selector():
     sx, sy = hd.screen.get_size()  
     c = 0 #counter because I decided to use a dictionary for the colours
     #looping through colours
-    for i in hd.colours:
-        Button_i = Button(c*sx/(len(hd.colours)*2)+sx/4,5*sy/6-by/2, bx, by, buttonText="", onclickFunction = hd.colours[i].colour_set)
-        colour = hd.colours[i].colour #changing the coloures stored in the button object
+    for i in colours:
+        Button_i = Button(c*sx/(len(colours)*2)+sx/4,5*sy/6-by/2, bx, by, buttonText="", onclickFunction = colours[i].colour_set)
+        colour = colours[i].colour #changing the coloures stored in the button object
         Button_i.fillColors["normal"] = colour
         colour_i = pg.Color(colour)
         h, s, l, a = colour_i.hsla
@@ -184,6 +276,7 @@ def draw_selector(screen, vehicle):
     Background = pg.transform.scale(hd.Background, ((sy/by)*bx, sy))
     screen.blit(Background, (0,0))
     vehicle.draw_button(screen)
+    vehicle.magnet.draw_button(screen, vehicle)
     screen.blit(vehicle.colour_surface, (4*sx/5-vx/2, (sy-vy)/2))
     screen.blit(vehicle.detail_surface, (4*sx/5-vx/2, (sy-vy)/2))
     nametag = hd.Title_Font.render(vehicle.name, True, (200, 200, 200))
@@ -195,21 +288,26 @@ def draw_selector(screen, vehicle):
     for i in hd.buttons:
         i.process(screen)
 
-
+def create_vehicles():
+    return cycler([vehicle("beancolour.png", "bean.png", hd.screen, health = 5, price = 0, owned = True),
+            vehicle("jeepcolour.png", "jeep.png", hd.screen, health = 10, price = 50),
+            vehicle("bugatticolour.png", "bugatti.png", hd.screen, health = 10, price = 100),
+            vehicle("panthercolour.png", "panther.png", hd.screen, health = 50, price = 500)])
     
-
+vehicles = create_vehicles()
     
 def menu():
     """Herein lie the few remaining local variables. 
     good place to create buttons that run global functions and such
     While loop to run the game at maximum 60 updates per second. 
     """
+
     run = True
     clock = pg.time.Clock()
     sx, sy = hd.screen.get_size()
     bx, by = hd.button_size
-    Button(sx-sx/5-bx/2,3*sy/4-by/2, bx, by, buttonImage = "down.png", onclickFunction = hd.vehicles.forward)
-    Button(sx-sx/5-bx/2 ,sy/4-by/2, bx, by, buttonImage = "up.png", onclickFunction = hd.vehicles.reverse)
+    Button(sx-sx/5-bx/2,3*sy/4-by/2, bx, by, buttonImage = "down.png", onclickFunction = vehicles.forward)
+    Button(sx-sx/5-bx/2 ,sy/4-by/2, bx, by, buttonImage = "up.png", onclickFunction = vehicles.reverse)
     #Button(sx/20, 19*sy/20-by/2, bx*5, by, buttonText = "Fullscreen", onclickFunction = toggle_fullscreen) #fullscreen button
     colour_selector()
     while run:
@@ -218,7 +316,7 @@ def menu():
             if event.type == pg.QUIT:
                 run = False
                 pg.quit() #it's surprisingly hard to quit without this functionality
-        draw_selector(hd.screen, hd.vehicles.item)
+        draw_selector(hd.screen, vehicles.item)
         pg.display.update() #update the display at the end of each loop
         
 
