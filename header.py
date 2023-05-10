@@ -5,20 +5,19 @@ pg.font.init()
 pg.display.set_caption('RoadRage')
 fullscreen = False
 screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
-#screen = pg.display.set_mode((1000, 800))
+screen = pg.display.set_mode((1000, 800))
 sx, sy = screen.get_size()
-Title_Font = pg.font.SysFont('Squarefont', int(200*sy/1440)) if sx >= sy*1.6 else pg.font.SysFont('Squarefont', int(200*sy/2560))
-Text_Font = pg.font.SysFont('Squarefont', int(100*sy/1440)) if sx >= sy*1.6 else pg.font.SysFont('Squarefont', int(100*sy/2560))
-Background = pg.image.load(os.path.join('assets', 'road.png'))
-FPS = 60
-dinero = 1000
-buttons = []
+Title_Font = pg.font.SysFont('Squarefont', int(200*sy/1440)) if sx >= sy*1.6 else pg.font.SysFont('Squarefont', int(200*sy/2560)) #for bigger text
+Text_Font = pg.font.SysFont('Squarefont', int(100*sy/1440)) if sx >= sy*1.6 else pg.font.SysFont('Squarefont', int(100*sy/2560)) #for smaller text
+Background = pg.image.load(os.path.join('assets', 'road.png')) #background image
+FPS = 60 #maximum uptades per second
+dinero = 1000 #money the player has collected to spend on upgrades
+buttons = [] #stores a list of buttons
 button_size = (sy/10, sy/10) if sx >= sy*1.6 else (sx/(160/9), sx/(160/9)) 
 scale = sy/96 if sx >= sy*1.6 else (sx/(96*16/9), sx/(96*16/9)) 
-obstacles = []
-coins = []
-menu = True
-driving = False
+obstacles = [] #used to store obstacle objects drawn to the road
+coins = [] #used to store coin objects drawn to the road
+menu = True #used to swap between gamemodes
 
 
 

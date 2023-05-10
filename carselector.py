@@ -18,16 +18,17 @@ def toggle_fullscreen():
     menu()
 
 
-
-
-def test():
-    print("test_success")
 class colour_class:
+    """
+    Used to store all the colours. used mainly just so I can set the colour of the vehicles without having
+    to pass values into the button function, although I could with kwargs. 
+    """
     def __init__(self, colour):
         self.colour = colour
     def colour_set(self):
         vehicles.item.set_colour(self.colour)
 
+#code is at least generalised enough to add or remove colours 
 colours ={
             "white" : colour_class((206,206,206)),
             "black" : colour_class((30,30,30)),
@@ -39,11 +40,14 @@ colours ={
         }
 
 class cycler:
+    """
+    cycles through a list of objects and returns just one instance at a time.
+    Used to cycle through the vehicles, allowing one global vehicle to have methods run on it.
+    """
     def __init__(self, items):
         self.items = items
         self.index = 0
         self.item = self.items[0]
-
     def forward(self):
         if self.index < (len(self.items)-1):
             self.index += 1
@@ -60,12 +64,11 @@ class cycler:
             self.item = self.items[self.index]
 
 
-
-
-
-
 def fill(surface, color):
-    """Fill all pixels of the surface with color, preserving transparency."""
+    """Fill all pixels of the surface with color, preserving transparency.
+    Used to change the colour layer of the vehicle.
+    """
+
     w, h = surface.get_size()
     r, g, b, _ = color
     for x in range(w):
@@ -74,6 +77,9 @@ def fill(surface, color):
             surface.set_at((x, y), pg.Color(r, g, b, a))
 
 def upgrade_button_dist(upgrades):
+    """
+    Used to distribute the upgrade buttons evenly along the top centre of the screen
+    """
     c=0
     sx, sy = hd.screen.get_size()
     bx, by = hd.button_size
@@ -83,7 +89,7 @@ def upgrade_button_dist(upgrades):
 
 class Button():
     """
-    Facilitates the creaton of button objects that execute a function on click.
+    Facilitates the creaton of button objects that execute a function on click / hover.
     """
     def __init__(self, x, y, width, height, buttonText="Button", onclickFunction=None, onePress=False, buttonImage = None, button_list = True, onhoverFunction = None):
         self.x = x
@@ -118,7 +124,7 @@ class Button():
     def process(self, screen, **kwargs):
         """
         Tracks mouse location and if mouse intersects with the button there is a colour change.
-        Upon click 
+        Upon click a predefined funciton is run.
         """
         mousePos = pg.mouse.get_pos()
         self.buttonSurface.fill((self.fillColors['normal']))
@@ -142,7 +148,10 @@ class Button():
         screen.blit(self.buttonSurface, self.buttonRect)
 
 class upgrade:
-    def __init__(self, image, owned = False, equipped = False, price = 10, scale = hd.scale, button_position = (hd.sx/2, hd.sy/6) ):
+    """Class that stores upgrade objects.
+    Upgrade objects have an image, a button and a modifier that they apply to a vehicle. 
+    """
+    def __init__(self, image, owned = False, equipped = False, price = 50, scale = hd.scale, button_position = (hd.sx/2, hd.sy/6) ):
         self.surface = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', "magnet.png")).convert_alpha(), scale)
         self.name = image[:-4]
         self.price = price
@@ -152,6 +161,7 @@ class upgrade:
         self.image = image
         bx, by = self.bpos
         self.description = self.name
+        self.upgrade_function = None
         #initialising buy state button
         self.button_buy = Button(bx, by, hd.button_size[0], hd.button_size[1], 
                                  buttonImage = image,   onhoverFunction = self.describe,
@@ -178,11 +188,16 @@ class upgrade:
                 screen.blit(text, (self.bpos[0]+bx/2-tx/2, self.bpos[1]+by/2-ty/2))
             else:
                 print("Error self.owned is not bool")
+
+    def modify(self, vehicle):
+        """placeholder
+        Simple and easy upgrades would be to increase the handling or health of the vehicle with the ram and wheel respectively.
+        The magnet will be more invlved as I want it to suck in money on the road."""
             
 
     def equip_toggle(self):
         """
-        Swapps the equip state for an upgrade instance. This will only become available once owned = True, see self.draw_button.
+        Toggles the equip state of an upgrade instance. This will only become available once owned = True, see self.draw_button.
         """
         if not self.equipped:
             self.equipped = True
@@ -194,7 +209,7 @@ class upgrade:
             self.button_equip.fillColors["hover"] = '#666666'
 
     def purchase(self):
-        """Used to purchase this upgrade instance. Will be stored in the instanced vehicle class so each vehicle has its own upgrades
+        """Used to purchase this upgrade instance. Will be stored in the instanced vehicle class so each vehicle has its own upgrades.
         Subtracts the price of the upgrade from global money "dinero" only if you can afford it and sets owned to True.
         """
         if not self.owned and hd.dinero >= self.price:
@@ -212,11 +227,13 @@ class upgrade:
 
     def describe(self):
         "Draws an ability description to the screen"
-        text = hd.Title_Font.render(self.description, True, (200, 200, 200))
+        text = hd.Text_Font.render(self.description, True, (200, 200, 200))
         tx, ty = text.get_size()
         hd.screen.blit(text, (hd.sx/2-tx/2, hd.sy/2-ty/2))
 
 class vehicle():
+    """Used to create vehicle objects
+    """
     def __init__(self, 
                  colour_image, 
                  detail_image, 
@@ -255,6 +272,7 @@ class vehicle():
         self.position = position
         self.colour = colours["blue"].colour
         self.set_colour(colours["white"].colour)
+    
     def set_upgrades(self, upgrades = upgrade("magnet.png")):
         self.upgrades = [i for i in upgrades]
 
@@ -329,10 +347,12 @@ def draw_selector(screen, vehicle):
     screen.blit(vehicle.colour_surface, (4*sx/5-vx/2, (sy-vy)/2))
     screen.blit(vehicle.detail_surface, (4*sx/5-vx/2, (sy-vy)/2))
     nametag = hd.Title_Font.render(vehicle.name, True, (200, 200, 200))
-    health = hd.Title_Font.render(str(vehicle.health) + " HP", True, (200, 200, 200))
+    health = hd.Text_Font.render("HP " + str(vehicle.health), True, (200, 200, 200))
+    handling = hd.Text_Font.render("Handling " + str(vehicle.handling), True, (200, 200, 200))
     money = hd.Title_Font.render("£ " + str(hd.dinero), True, (200, 200, 200))
     screen.blit(nametag, (sx/20, sy-sy/2-nametag.get_size()[1]/2))
-    screen.blit(health, (sx-sx/20-health.get_size()[0], sy/8-health.get_size()[1]/2))
+    screen.blit(health, (sx-sx/10, sy/16-health.get_size()[1]/2))
+    screen.blit(handling, (sx-sx/10, 2*sy/16-health.get_size()[1]/2))
     screen.blit(money, (sx/20, sy/8-health.get_size()[1]/2))
     for i in hd.buttons:
         i.process(screen)
@@ -340,8 +360,9 @@ def draw_selector(screen, vehicle):
 def create_vehicles():
     return cycler([vehicle("beancolour.png", "bean.png", hd.screen, health = 5, price = 0, owned = True, upgrades = [upgrade("magnet.png"),upgrade("ram.png"),upgrade("wheel.png")]),
             vehicle("jeepcolour.png", "jeep.png", hd.screen, health = 10, price = 50, upgrades = [upgrade("magnet.png"),upgrade("ram.png"),upgrade("wheel.png")]),
-            vehicle("bugatticolour.png", "bugatti.png", hd.screen, health = 10, price = 100, upgrades = [upgrade("magnet.png"),upgrade("ram.png"),upgrade("wheel.png")]),
-            vehicle("panthercolour.png", "panther.png", hd.screen, health = 50, price = 500, upgrades = [upgrade("magnet.png"),upgrade("ram.png"),upgrade("wheel.png")])])
+            vehicle("bugatticolour.png", "bugatti.png", hd.screen, health = 8, price = 100, upgrades = [upgrade("magnet.png"),upgrade("ram.png"),upgrade("wheel.png")], handling = 15),
+            vehicle("panthercolour.png", "panther.png", hd.screen, health = 50, price = 500, upgrades = [upgrade("magnet.png"),upgrade("ram.png"),upgrade("wheel.png")], handling = 7)
+            ])
     
 vehicles = create_vehicles()
     
@@ -368,12 +389,20 @@ def menu():
                 pg.quit() #it's surprisingly hard to quit without this functionality
         draw_selector(hd.screen, vehicles.item)
         pg.display.update() #update the display at the end of each loop
+
+def play():
+    "a"
         
 
 
 
 if __name__ == '__main__':
-    menu()
+    if hd.menu:
+        menu()
+    elif not hd.menu:
+        play()
+    else:
+        print("gamemode error")
     pg.quit()
  
 
