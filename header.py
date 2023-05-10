@@ -5,7 +5,7 @@ pg.font.init()
 pg.display.set_caption('RoadRage')
 fullscreen = False
 screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
-screen = pg.display.set_mode((1000, 800))
+#screen = pg.display.set_mode((1000, 800))
 sx, sy = screen.get_size()
 Title_Font = pg.font.SysFont('Squarefont', int(200*sy/1440)) if sx >= sy*1.6 else pg.font.SysFont('Squarefont', int(200*sy/2560)) #for bigger text
 Text_Font = pg.font.SysFont('Squarefont', int(100*sy/1440)) if sx >= sy*1.6 else pg.font.SysFont('Squarefont', int(100*sy/2560)) #for smaller text
