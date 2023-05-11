@@ -268,14 +268,14 @@ class vehicle:
                              onclickFunction = play)
         self.magnet = upgrade("magnet.png")
         self.upgrades = upgrades
+
         upgrade_button_dist(upgrades)
         self.name = detail_image[:-4]
         self.health = health
         self.speed = speed
-        self.handling = handling*2000/hd.sy
+        self.handling = handling
         self.owned = owned
         self.pos = [0,(hd.sy-self.size[1])/2]
-        print(self.pos)
         self.colour = colours["blue"].colour
         self.set_colour(colours["white"].colour)
     
@@ -299,7 +299,7 @@ class vehicle:
         
 
     def handle_movement(self, keys_pressed):
-        VEL = self.handling
+        VEL = self.handling*2000/hd.sy
         if keys_pressed[pg.K_w] and self.pos[1] - VEL > 0:  #down
             self.pos[1] -= VEL
         if keys_pressed[pg.K_s] and self.pos[1] + VEL + self.size[1] < hd.sy:  # up
@@ -404,7 +404,6 @@ def main():
     Button(sx-sx/5-bx/2 ,sy/4-by/2, bx, by, buttonImage = "up.png", onclickFunction = vehicles.reverse)
     #Button(sx/20, 19*sy/20-by/2, bx*5, by, buttonText = "Fullscreen", onclickFunction = toggle_fullscreen) #fullscreen button
     colour_selector()
-    print(len(hd.buttons))
     while hd.menu:
         clock.tick(hd.FPS)
         for event in pg.event.get():
