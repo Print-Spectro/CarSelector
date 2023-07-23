@@ -16,7 +16,6 @@ def toggle_fullscreen():
     hd.buttons = []
     hd.vehicles = hd.create_vehicles()
     colour_selector()
-    menu()
 
 
 class colour_class:
@@ -299,7 +298,7 @@ class vehicle:
         
 
     def handle_movement(self, keys_pressed):
-        VEL = self.handling*2000/hd.sy
+        VEL = self.handling*1000/hd.sy
         if keys_pressed[pg.K_w] and self.pos[1] - VEL > 0:  #down
             self.pos[1] -= VEL
         if keys_pressed[pg.K_s] and self.pos[1] + VEL + self.size[1] < hd.sy:  # up
@@ -324,6 +323,14 @@ class vehicle:
             self.owned = True
             hd.dinero -= self.price
             self.set_colour(self.colour)
+
+class coin():
+    def __init__(self):
+        self.surface = pg.transform.scale_by(pg.image.load(hd.os.path.join('assets', "coin.png")).convert_alpha(), hd.scale)
+        self.x = 0
+        self.y = 0
+    def move(self):
+            ...
             
 def colour_selector():
     """Creates n buttons from the colours list in the header
